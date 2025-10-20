@@ -2,8 +2,8 @@ package com.cvcoach.service;
 
 import com.cvcoach.model.CvData;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
@@ -11,10 +11,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class CvAnalysisService {
+
+    private static final Logger log = LoggerFactory.getLogger(CvAnalysisService.class);
 
     private final ChatClient.Builder chatClientBuilder;
     private final ObjectMapper objectMapper;
@@ -33,47 +33,45 @@ public class CvAnalysisService {
           "current_job_branch": "industry/field name",
           "years_in_current_branch": number
         }
-        
+
         CV Content:
         {cv_text}
-        
+
         Return only the JSON object, nothing else.
         """;
 
-    /**
-     * Analyzes CV and extracts structured data using OpenAI
-     */
+    public CvAnalysisService(ChatClient.Builder chatClientBuilder,
+                             ObjectMapper objectMapper,
+                             PdfParserService pdfParserService,
+                             CsvStorageService csvStorageService) {
+        this.chatClientBuilder = chatClientBuilder;
+        this.objectMapper = objectMapper;
+        this.pdfParserService = pdfParserService;
+        this.csvStorageService = csvStorageService;
+    }
+
     public CvData analyzeCv() throws Exception {
         log.info("Starting CV analysis...");
 
-        // Extract text from PDF
         String cvText = pdfParserService.extractTextFromCv();
 
-        // Create prompt
         PromptTemplate promptTemplate = new PromptTemplate(CV_ANALYSIS_PROMPT);
         Prompt prompt = promptTemplate.create(Map.of("cv_text", cvText));
 
-        // Call OpenAI API
         ChatClient chatClient = chatClientBuilder.build();
         String response = chatClient.prompt(prompt).call().content();
 
         log.info("Received AI response: {}", response);
 
-        // Parse JSON response
         CvData cvData = parseJsonResponse(response);
 
-        // Save to CSV
         csvStorageService.saveCvData(cvData);
 
         log.info("CV analysis completed successfully");
         return cvData;
     }
 
-    /**
-     * Parses JSON response from AI, handling potential markdown wrapping
-     */
     private CvData parseJsonResponse(String response) throws Exception {
-        // Clean up response - remove markdown code blocks if present
         String cleanJson = response.trim();
         if (cleanJson.startsWith("```json")) {
             cleanJson = cleanJson.substring(7);
