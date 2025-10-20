@@ -1,22 +1,23 @@
 package com.cvcoach.ui;
 
-import com.cvcoach.model.CvData;
-import com.cvcoach.model.JobPosition;
-import com.cvcoach.service.CvAnalysisService;
-import com.cvcoach.service.CsvStorageService;
-import com.cvcoach.service.JobSearchService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.Scanner;
 
-@Slf4j
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import com.cvcoach.model.CvData;
+import com.cvcoach.model.JobPosition;
+import com.cvcoach.service.CsvStorageService;
+import com.cvcoach.service.CvAnalysisService;
+import com.cvcoach.service.JobSearchService;
+
 @Component
-@RequiredArgsConstructor
 public class ConsoleMenu implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(ConsoleMenu.class);
 
     private final CvAnalysisService cvAnalysisService;
     private final JobSearchService jobSearchService;
@@ -24,6 +25,14 @@ public class ConsoleMenu implements CommandLineRunner {
 
     private CvData currentCvData;
     private final Scanner scanner = new Scanner(System.in);
+
+    public ConsoleMenu(CvAnalysisService cvAnalysisService,
+                       JobSearchService jobSearchService,
+                       CsvStorageService csvStorageService) {
+        this.cvAnalysisService = cvAnalysisService;
+        this.jobSearchService = jobSearchService;
+        this.csvStorageService = csvStorageService;
+    }
 
     @Override
     public void run(String... args) {
@@ -80,7 +89,7 @@ public class ConsoleMenu implements CommandLineRunner {
 
         try {
             currentCvData = cvAnalysisService.analyzeCv();
-            System.out.println(currentCvData);
+            System.out.println(currentCvData.toFormattedString());
             System.out.println("✓ CV data saved to data/cv_data.csv");
 
         } catch (Exception e) {
@@ -109,7 +118,7 @@ public class ConsoleMenu implements CommandLineRunner {
             System.out.println("=".repeat(50));
 
             for (int i = 0; i < jobs.size(); i++) {
-                System.out.println("\n[" + (i + 1) + "] " + jobs.get(i));
+                System.out.println("\n[" + (i + 1) + "] " + jobs.get(i).toFormattedString());
             }
 
         } catch (Exception e) {

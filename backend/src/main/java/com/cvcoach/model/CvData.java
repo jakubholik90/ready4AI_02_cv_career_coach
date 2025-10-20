@@ -65,8 +65,10 @@ public class CvData {
         };
     }
 
-    @Override
-    public String toString() {
+    /**
+     * Custom toString method for formatted display
+     */
+    public String toFormattedString() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n=== CV Analysis Results ===\n");
         sb.append("Location: ").append(currentLocation).append("\n");

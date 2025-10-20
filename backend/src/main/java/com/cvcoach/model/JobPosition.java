@@ -33,8 +33,10 @@ public class JobPosition {
     @JsonProperty("match_reason")
     private String matchReason;
 
-    @Override
-    public String toString() {
+    /**
+     * Custom toString method for formatted display
+     */
+    public String toFormattedString() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n--- Job Position ---\n");
         sb.append("Title: ").append(title).append("\n");
