@@ -5,32 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="60f14b8c-78bd-4239-b843-a043350c65e4" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/RAILWAY_DEPLOYMENT.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/cvcoach/controller/CvController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/cvcoach/model/CvDataEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/com/cvcoach/repository/CvDataRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/static/app.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/static/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/static/style.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/.idea/compiler.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/CvCareerCoachApplication.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/CvCareerCoachApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/cvcoach/CvCareerCoachApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/config/AiConfiguration.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/config/AiConfiguration.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/model/CvData.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/model/CvData.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/cvcoach/model/CvData.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/model/JobPosition.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/model/JobPosition.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/cvcoach/model/JobPosition.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/service/CsvStorageService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/service/CvAnalysisService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/cvcoach/service/CvAnalysisService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/service/JobSearchService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/cvcoach/service/JobSearchService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/service/PdfParserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/cvcoach/service/PdfParserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/ui/ConsoleMenu.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/cvcoach/ui/ConsoleMenu.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/example-application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/example-application.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
