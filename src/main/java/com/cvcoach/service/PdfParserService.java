@@ -1,56 +1,93 @@
 package com.cvcoach.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
-@Slf4j
+/**
+ * Service for parsing PDF files and extracting text content
+ * Images are ignored - only text is extracted
+ */
 @Service
+@Slf4j
 public class PdfParserService {
 
-    private static final String CV_FOLDER = "cv";
-
     /**
-     * Reads and extracts text from the first PDF file found in cv/ folder
+     * Extract text from PDF InputStream
+     *
+     * @param inputStream PDF file input stream
+     * @return Extracted text content
+     * @throws IOException if PDF parsing fails
      */
-    public String extractTextFromCv() throws IOException {
-        File cvFolder = new File(CV_FOLDER);
+    public String extractText(InputStream inputStream) throws IOException {
+        log.info("Starting PDF text extraction");
 
-        if (!cvFolder.exists() || !cvFolder.isDirectory()) {
-            throw new IOException("CV folder not found. Please create 'cv' folder and place your CV PDF there.");
+        try (PDDocument document = Loader.loadPDF(inputStream.readAllBytes())) {
+
+            // Handle encrypted PDFs
+            if (document.isEncrypted()) {
+                log.warn("PDF is encrypted, attempting to decrypt");
+                try {
+                    document.setAllSecurityToBeRemoved(true);
+                } catch (Exception e) {
+                    log.error("Failed to decrypt PDF", e);
+                    throw new IOException("PDF is password-protected and cannot be decrypted");
+                }
+            }
+
+            // Extract text
+            PDFTextStripper stripper = new PDFTextStripper();
+
+            // Configure text extraction
+            stripper.setSortByPosition(true);
+            stripper.setStartPage(1);
+            stripper.setEndPage(document.getNumberOfPages());
+
+            String text = stripper.getText(document);
+
+            // Clean up text
+            text = cleanText(text);
+
+            log.info("Successfully extracted {} characters from PDF ({} pages)",
+                    text.length(), document.getNumberOfPages());
+
+            return text;
+
+        } catch (IOException e) {
+            log.error("Error parsing PDF file", e);
+            throw new IOException("Failed to parse PDF: " + e.getMessage(), e);
         }
-
-        File[] pdfFiles = cvFolder.listFiles((dir, name) ->
-                name.toLowerCase().endsWith(".pdf"));
-
-        if (pdfFiles == null || pdfFiles.length == 0) {
-            throw new IOException("No PDF file found in cv/ folder. Please place your CV PDF there.");
-        }
-
-        File cvFile = pdfFiles[0];
-        log.info("Reading CV from: {}", cvFile.getName());
-
-        return extractTextFromPdf(cvFile);
     }
 
     /**
-     * Extracts text content from a PDF file
+     * Extract text from CV PDF file (alias for backward compatibility)
+     *
+     * @param inputStream PDF file input stream
+     * @return Extracted text content
+     * @throws IOException if PDF parsing fails
      */
-    private String extractTextFromPdf(File pdfFile) throws IOException {
-        try (PDDocument document = PDDocument.load(pdfFile)) {
-            PDFTextStripper stripper = new PDFTextStripper();
-            String text = stripper.getText(document);
+    public String extractTextFromCV(InputStream inputStream) throws IOException {
+        return extractText(inputStream);
+    }
 
-            if (text == null || text.trim().isEmpty()) {
-                throw new IOException("PDF file appears to be empty or unreadable");
-            }
-
-            log.info("Successfully extracted {} characters from PDF", text.length());
-            return text;
+    /**
+     * Clean extracted text - remove excessive whitespace and special characters
+     */
+    private String cleanText(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
         }
+
+        return text
+                .replaceAll("\\r\\n", "\n")     // Normalize line endings
+                .replaceAll("\\r", "\n")        // Normalize line endings
+                .replaceAll("\\n{3,}", "\n\n")  // Max 2 consecutive newlines
+                .replaceAll("[ \\t]{2,}", " ")  // Max 1 consecutive space
+                .trim();
     }
 }

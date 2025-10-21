@@ -1,93 +1,142 @@
 package com.cvcoach.service;
 
 import com.cvcoach.model.CvData;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
+/**
+ * Service for analyzing CV content using OpenAI
+ */
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class CvAnalysisService {
-
-    private static final Logger log = LoggerFactory.getLogger(CvAnalysisService.class);
 
     private final ChatClient.Builder chatClientBuilder;
     private final ObjectMapper objectMapper;
-    private final PdfParserService pdfParserService;
-    private final CsvStorageService csvStorageService;
 
-    private static final String CV_ANALYSIS_PROMPT = """
-        Analyze the following CV and extract structured information.
-        Return ONLY a valid JSON object with the following structure (no markdown, no extra text):
-        {
-          "current_location": "city, country",
-          "hard_skills": ["skill1", "skill2", "skill3"],
-          "soft_skills": ["language1", "language2"],
-          "education": "highest degree and field",
-          "total_years_experience": number,
-          "current_job_branch": "industry/field name",
-          "years_in_current_branch": number
-        }
-
-        CV Content:
-        {cv_text}
-
-        Return only the JSON object, nothing else.
-        """;
-
-    public CvAnalysisService(ChatClient.Builder chatClientBuilder,
-                             ObjectMapper objectMapper,
-                             PdfParserService pdfParserService,
-                             CsvStorageService csvStorageService) {
-        this.chatClientBuilder = chatClientBuilder;
-        this.objectMapper = objectMapper;
-        this.pdfParserService = pdfParserService;
-        this.csvStorageService = csvStorageService;
-    }
-
-    public CvData analyzeCv() throws Exception {
-        log.info("Starting CV analysis...");
-
-        String cvText = pdfParserService.extractTextFromCv();
-
-        PromptTemplate promptTemplate = new PromptTemplate(CV_ANALYSIS_PROMPT);
-        Prompt prompt = promptTemplate.create(Map.of("cv_text", cvText));
-
-        ChatClient chatClient = chatClientBuilder.build();
-        String response = chatClient.prompt(prompt).call().content();
-
-        log.info("Received AI response: {}", response);
-
-        CvData cvData = parseJsonResponse(response);
-
-        csvStorageService.saveCvData(cvData);
-
-        log.info("CV analysis completed successfully");
-        return cvData;
-    }
-
-    private CvData parseJsonResponse(String response) throws Exception {
-        String cleanJson = response.trim();
-        if (cleanJson.startsWith("```json")) {
-            cleanJson = cleanJson.substring(7);
-        } else if (cleanJson.startsWith("```")) {
-            cleanJson = cleanJson.substring(3);
-        }
-        if (cleanJson.endsWith("```")) {
-            cleanJson = cleanJson.substring(0, cleanJson.length() - 3);
-        }
-        cleanJson = cleanJson.trim();
+    /**
+     * Analyze CV text and extract structured information using AI
+     *
+     * @param cvText Raw text extracted from CV
+     * @return Structured CV data
+     */
+    public CvData analyzeCv(String cvText) {
+        log.info("Starting CV analysis with OpenAI");
 
         try {
-            return objectMapper.readValue(cleanJson, CvData.class);
+            String promptText = """
+                    Analyze the following CV and extract information in JSON format.
+                    
+                    Required fields:
+                    - location: string (city and country)
+                    - hardSkills: string (semicolon-separated list of technical skills)
+                    - softSkills: string (semicolon-separated list of soft skills)
+                    - education: string (highest degree and field)
+                    - totalExperienceYears: integer (total years of work experience)
+                    - jobBranch: string (main professional field/industry)
+                    - branchExperienceYears: integer (years in the main field)
+                    
+                    CV Content:
+                    {cvContent}
+                    
+                    Respond ONLY with valid JSON, no additional text or markdown formatting.
+                    """;
+
+            PromptTemplate promptTemplate = new PromptTemplate(promptText);
+            Prompt prompt = promptTemplate.create(Map.of("cvContent", cvText));
+
+            ChatClient chatClient = chatClientBuilder.build();
+
+            log.debug("Sending request to OpenAI API...");
+
+            String response = chatClient.prompt(prompt)
+                    .call()
+                    .content();
+
+            log.debug("OpenAI raw response: {}", response);
+
+            return parseAiResponse(response);
+
         } catch (Exception e) {
-            log.error("Failed to parse JSON response: {}", cleanJson);
-            throw new Exception("Failed to parse AI response. Please try again.", e);
+            log.error("Failed to analyze CV with OpenAI", e);
+
+            // Check for common issues
+            if (e.getMessage().contains("401") || e.getMessage().contains("Unauthorized")) {
+                throw new RuntimeException("Invalid OpenAI API key. Please check your OPENAI_API_KEY environment variable.", e);
+            }
+            if (e.getMessage().contains("429") || e.getMessage().contains("quota")) {
+                throw new RuntimeException("OpenAI API quota exceeded. Please check your account at https://platform.openai.com/usage", e);
+            }
+            if (e.getMessage().contains("timeout")) {
+                throw new RuntimeException("OpenAI API timeout. Please try again.", e);
+            }
+
+            throw new RuntimeException("Failed to analyze CV: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Analyze CV from file path (backward compatibility)
+     *
+     * @param cvPath Path to CV PDF file
+     * @return Structured CV data
+     * @throws IOException if file reading fails
+     */
+    public CvData analyzeCvFromFile(Path cvPath) throws IOException {
+        log.info("Reading CV from file: {}", cvPath);
+
+        // This would require PdfParserService - kept for backward compatibility
+        throw new UnsupportedOperationException(
+                "Use analyzeCv(String cvText) instead. Extract text first using PdfParserService."
+        );
+    }
+
+    /**
+     * Parse AI response into CvData object
+     * Handles both plain JSON and markdown-wrapped JSON
+     */
+    private CvData parseAiResponse(String response) {
+        try {
+            // Clean response - remove markdown code blocks if present
+            String cleanJson = response.trim();
+
+            if (cleanJson.startsWith("```json")) {
+                cleanJson = cleanJson.substring(7);
+            } else if (cleanJson.startsWith("```")) {
+                cleanJson = cleanJson.substring(3);
+            }
+
+            if (cleanJson.endsWith("```")) {
+                cleanJson = cleanJson.substring(0, cleanJson.length() - 3);
+            }
+
+            cleanJson = cleanJson.trim();
+
+            log.debug("Cleaned JSON: {}", cleanJson);
+
+            // Parse JSON to CvData
+            CvData cvData = objectMapper.readValue(cleanJson, CvData.class);
+
+            log.info("Successfully parsed CV data: location={}, branch={}",
+                    cvData.getLocation(), cvData.getJobBranch());
+
+            return cvData;
+
+        } catch (JsonProcessingException e) {
+            log.error("Failed to parse AI response as JSON: {}", response, e);
+            throw new RuntimeException("Failed to parse AI response: " + e.getMessage(), e);
         }
     }
 }

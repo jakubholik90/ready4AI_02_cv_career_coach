@@ -17,26 +17,22 @@ A Java console application that uses OpenAI to analyze your CV and find matching
 ## Project Structure
 
 ```
-cv-career-coach/
-├── src/main/java/com/cvcoach/
-│   ├── CvCareerCoachApplication.java
-│   ├── model/
-│   │   ├── CvData.java
-│   │   └── JobPosition.java
-│   ├── service/
-│   │   ├── CvAnalysisService.java
-│   │   ├── CsvStorageService.java
-│   │   ├── JobSearchService.java
-│   │   └── PdfParserService.java
-│   └── ui/
-│       └── ConsoleMenu.java
-├── src/main/resources/
-│   └── application.properties
-├── cv/                          (create this folder)
-│   └── your-cv.pdf             (place your CV here)
-├── data/                        (auto-created)
-│   └── cv_data.csv             (generated data)
-└── pom.xml
+src/main/java/com/cvcoach/
+├── CvCareerCoachApplication.java
+├── config/                        ← NOWY folder
+│   └── AiConfiguration.java      ← UTWÓRZ TEN PLIK
+├── controller/
+│   └── CvController.java
+├── model/
+│   ├── CvData.java
+│   ├── CvDataEntity.java
+│   └── JobPosition.java
+├── repository/
+│   └── CvDataRepository.java
+└── service/
+    ├── CvAnalysisService.java    (używa ChatClient.Builder)
+    ├── JobSearchService.java     (używa ChatClient.Builder)
+    └── PdfParserService.java
 ```
 
 ## Setup Instructions

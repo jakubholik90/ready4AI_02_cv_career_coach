@@ -6,79 +6,42 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
+/**
+ * Data Transfer Object for CV information
+ * Used for JSON serialization/deserialization with OpenAI API
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class CvData {
 
-    @JsonProperty("current_location")
-    private String currentLocation;
+    @JsonProperty("location")
+    private String location;
 
-    @JsonProperty("hard_skills")
-    private List<String> hardSkills;
+    @JsonProperty("hardSkills")
+    private String hardSkills;
 
-    @JsonProperty("soft_skills")
-    private List<String> softSkills;
+    @JsonProperty("softSkills")
+    private String softSkills;
 
     @JsonProperty("education")
     private String education;
 
-    @JsonProperty("total_years_experience")
-    private Integer totalYearsExperience;
+    @JsonProperty("totalExperienceYears")
+    private Integer totalExperienceYears;
 
-    @JsonProperty("current_job_branch")
-    private String currentJobBranch;
+    @JsonProperty("jobBranch")
+    private String jobBranch;
 
-    @JsonProperty("years_in_current_branch")
-    private Integer yearsInCurrentBranch;
+    @JsonProperty("branchExperienceYears")
+    private Integer branchExperienceYears;
 
-    /**
-     * Converts CV data to CSV row format
-     */
-    public String[] toCsvRow() {
-        return new String[]{
-                currentLocation != null ? currentLocation : "",
-                hardSkills != null ? String.join(";", hardSkills) : "",
-                softSkills != null ? String.join(";", softSkills) : "",
-                education != null ? education : "",
-                totalYearsExperience != null ? totalYearsExperience.toString() : "0",
-                currentJobBranch != null ? currentJobBranch : "",
-                yearsInCurrentBranch != null ? yearsInCurrentBranch.toString() : "0"
-        };
-    }
-
-    /**
-     * Returns CSV header
-     */
-    public static String[] getCsvHeader() {
-        return new String[]{
-                "Location",
-                "Hard Skills",
-                "Soft Skills",
-                "Education",
-                "Total Experience (Years)",
-                "Job Branch",
-                "Branch Experience (Years)"
-        };
-    }
-
-    /**
-     * Custom toString method for formatted display
-     */
-    public String toFormattedString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n=== CV Analysis Results ===\n");
-        sb.append("Location: ").append(currentLocation).append("\n");
-        sb.append("Hard Skills: ").append(hardSkills).append("\n");
-        sb.append("Soft Skills: ").append(softSkills).append("\n");
-        sb.append("Education: ").append(education).append("\n");
-        sb.append("Total Experience: ").append(totalYearsExperience).append(" years\n");
-        sb.append("Current Job Branch: ").append(currentJobBranch).append("\n");
-        sb.append("Years in Branch: ").append(yearsInCurrentBranch).append(" years\n");
-        sb.append("===========================\n");
-        return sb.toString();
+    @Override
+    public String toString() {
+        return String.format(
+                "CvData{location='%s', jobBranch='%s', experience=%d years, hardSkills='%s'}",
+                location, jobBranch, totalExperienceYears, hardSkills
+        );
     }
 }
